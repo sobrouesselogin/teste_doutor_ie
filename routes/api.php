@@ -24,8 +24,7 @@ Route::prefix('v1')->group(function () {
     // Route::post('/auth/token', [ProductController::class, 'store']);
     Route::get('/livros', [LivroController::class, 'list']);
     Route::post('/livros', [LivroController::class, 'store']);
-    // Route::post('v1/livros/{livroId}/importar-indices-xml', [ProductController::class, 'store']);
-    // v1/livros/{livroId}/importar-indices-xml
+    Route::post('/livros/{livroId}/importar-indices-xml', [LivroController::class, 'importIndexesFromXml']);
 });
 
 // POST v1/auth/token Recuperar token de acesso do usuário para poder acessar as

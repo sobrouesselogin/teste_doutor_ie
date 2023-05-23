@@ -84,38 +84,8 @@ class LivroController extends Controller
 
                 //save indices relation
                 $indexesArray = json_decode($request->indices, true);
-                $indexesToBeInserted = [];
-                foreach ($indexesArray as $index) {
-                    //$subIndexesObject = self::getSubIndexesObjectsRecursively($index['subindices']);
-
-                    $indexToBeInserted = new Indice([
-                        'titulo' => $index['titulo'], 
-                        'pagina' => $index['pagina'],
-                        // 'indices' => $subIndexesObject
-                    ]);
-                    $insertedBook->indices()->save($indexToBeInserted);
-
-                    //salva os subindices
-                    if (array_key_exists("subindices", $index)) {
-                        foreach ($index['subindices'] as $subIndex) {
-                            $subIndexToBeInserted = new Indice([
-                                'titulo' => $subIndex['titulo'], 
-                                'pagina' => $subIndex['pagina'],
-                                'indice_pai_id' => $indexToBeInserted->id,
-                                'livro_id' => $insertedBook->id
-                            ]);
-                            $indexToBeInserted->indices()->save($subIndexToBeInserted);
-                        }
-                    }
-
-                    //TODO: função recursiva para aceita níveis ilimitados de subindices
-                    //self::saveSubIndexesRecursively($index['subindices']);
-                }
-                //$insertedBook->indices()->saveMany($indexesToBeInserted);
-
-                //update model with relations
-                $insertedBook->refresh();
-
+                
+                self::saveIndexesRecursively($indexesArray, $insertedBook->id, $parentIndexId = null);
             });
 
             return response()->json(['message'=>'Inserido com sucesso'], 200); 
@@ -126,24 +96,56 @@ class LivroController extends Controller
         }
     }
 
-    //TODO: função recursiva para aceita níveis ilimitados de subindices
-    private static function saveSubIndexesRecursively($subIndexesArray) {
-        if (empty($subIndexesArray)) {
-            return [];
+    private static function saveIndexesRecursively($indexesArray, $bookId, $parentIndexId = null) {
+        if (empty($indexesArray)) {
+            return;
         }
 
-        $subIndexesObjectArray = [];
-        foreach ($subIndexesArray as $subIndex) {
-            $subIndexObject = new Indice([
-                'titulo' => $subIndex['titulo'], 
-                'pagina' => $subIndex['pagina'],
-                'indice_pai_id' => $subIndex['pagina'],
-                'indices' => self::getSubIndexesObjectsRecursively($subIndex['subindices'])
-            ]);
+        //iterate items
+        foreach ($indexesArray as $index) {
+            $index['livro_id'] = $bookId;
+            if (!is_null($parentIndexId)) {
+                $index['indice_pai_id'] = $parentIndexId;
+            }
+            $insertedIndex = Indice::create($index);
+            
+            self::saveIndexesRecursively($index['subindices'], $bookId, $insertedIndex->id);
         }
-        $subIndexesObjectArray[] = $subIndexObject;
-
-        return $subIndexesObjectArray;
     }
-    
+
+    /**
+     * Import indexes from xml body.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  int  $bookId Id of the book
+     * @return \Illuminate\Http\Response
+     */
+    public function importIndexesFromXml(Request $request, $bookId) {
+        DB::transaction(function () use ($request, $bookId) {
+            $book = Livro::find($bookId);
+
+            $xmlString = $request->getContent();
+            $xmlObject = simplexml_load_string($xmlString);
+
+            self::saveXmlIndexesRecursively($xmlObject->item, $bookId);
+        });
+    }
+
+    private static function saveXmlIndexesRecursively($itemsArray, $bookId, $parentIndexId = null) {
+        if (empty($itemsArray)) {
+            return;
+        }
+
+        //iterate items
+        foreach ($itemsArray as $item) {
+            $indexValues = current($item->attributes());
+            $indexValues['livro_id'] = $bookId;
+            if (!is_null($parentIndexId)) {
+                $indexValues['indice_pai_id'] = $parentIndexId;
+            }
+            $insertedIndex = Indice::create($indexValues);
+            
+            self::saveXmlIndexesRecursively($item->children(), $bookId, $insertedIndex->id);
+        }
+    }
 }
