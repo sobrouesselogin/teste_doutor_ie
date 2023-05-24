@@ -62,8 +62,6 @@ class LivroController extends Controller
                 'result'=>null
             ], 200); 
         }
-
-        return view('product.list', ['products' => $products]);
     }
 
     /**

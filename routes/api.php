@@ -4,6 +4,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\LivroController;
+use App\Http\Controllers\UserController;
 
 /*
 |--------------------------------------------------------------------------
@@ -16,33 +17,14 @@ use App\Http\Controllers\LivroController;
 |
 */
 
-Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-    return $request->user();
-});
+// Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
+//     return $request->user();
+// });
 
 Route::prefix('v1')->group(function () {
-    // Route::post('/auth/token', [ProductController::class, 'store']);
-    Route::get('/livros', [LivroController::class, 'list']);
-    Route::post('/livros', [LivroController::class, 'store']);
-    Route::post('/livros/{livroId}/importar-indices-xml', [LivroController::class, 'importIndexesFromXml']);
+    Route::post('/auth/token', [UserController::class, 'getToken']);
+    //Necessário passar parâmetro "api_token" (token recebido no '/auth/token) para as rotas seguintes
+    Route::middleware('auth:api')->get('/livros', [LivroController::class, 'list']);
+    Route::middleware('auth:api')->post('/livros', [LivroController::class, 'store']);
+    Route::middleware('auth:api')->post('/livros/{livroId}/importar-indices-xml', [LivroController::class, 'importIndexesFromXml']);
 });
-
-// POST v1/auth/token Recuperar token de acesso do usuário para poder acessar as
-// outras rotas
-// GET v1/livros Listar livros
-// POST v1/livros Cadastrar livro.
-// POST v1/livros/{livroId}/importar-indices-xml Importar índices em xml
-// Cada rota de livro está documentada nas páginas seguintes.
-// GET v1/livros
-// - descrição: Listar livros
-// - query params:
-// - titulo: filtrar por titulo do livro
-// - titulo_do_indice: retornar livro que possui o índice com o título pesquisado juntamente
-// com os seus ascendentes, quando houver.
-// - response:
-// Exemplo, se pesquisar o título do índice Beta deve retornar o seguinte resultado
-// POST v1/livros
-// - descrição: Cadastrar livro, validar estrutura dos índices
-// - request body:
-// POST v1/livros/{livroId}/importar-indices-xml
-// Requisito: Criar job para importação do XM
