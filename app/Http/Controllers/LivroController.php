@@ -34,7 +34,7 @@ class LivroController extends Controller
 
                         $booksQuery->whereIn('id', $bookIds);
                     } else {
-                        //índice inexistente, retorna array vazio
+                        //unexisting id, return empty
                         $booksQuery->whereIn('id', [-1]);
                     }
                 }
@@ -80,7 +80,6 @@ class LivroController extends Controller
                     'titulo' => $request->titulo
                 ]);
 
-                //save indices relation
                 $indexesArray = json_decode($request->indices, true);
                 
                 self::saveIndexesRecursively($indexesArray, $insertedBook->id, $parentIndexId = null);
