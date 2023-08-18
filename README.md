@@ -1,3 +1,16 @@
+Esse é um webservice utilizando Laravel e Eloquent (ORM) que permite realizar operações de cadastro, listagem e importação de livros conforme rotas abaixo (as rotas estão no arquivo routes\api.php):<br>
+<br>
+# Route::middleware('auth:api')->get('/livros', [LivroController::class, 'list']);<br>
+Lista os livros cadastrados permitindo uma série de filtros.<br>
+<br>
+# Route::middleware('auth:api')->post('/livros', [LivroController::class, 'store']);<br>
+Realiza o cadastro de um ou mais livros.<br>
+Utilizada recursividade para permitir um cadastro de livros em árvore.<br>
+<br>
+# Route::middleware('auth:api')->post('/livros/{livroId}/importar-indices-xml', [LivroController::class, 'importIndexesFromXml']);<br>
+Realiza importação de livros via xml (xml passado no body do request).<br>
+Utilizada recursividade para permitir um cadastro de livros em árvore.<br>
+<br>
 <p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
 
 <p align="center">
